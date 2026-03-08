@@ -1409,10 +1409,22 @@ async def health_check():
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS: allow frontend domain; CORS_ORIGINS env can add more (comma-separated)
+_cors_origins_raw = os.environ.get('CORS_ORIGINS', '*').strip()
+if _cors_origins_raw == '*':
+    _cors_origins = ['*']
+else:
+    _cors_origins = [o.strip() for o in _cors_origins_raw.split(',') if o.strip()]
+    _sales_domain = 'https://sales.demo.agrayianailabs.com'
+    if _sales_domain not in _cors_origins:
+        _cors_origins.append(_sales_domain)
+    if 'http://sales.demo.agrayianailabs.com' not in _cors_origins:
+        _cors_origins.append('http://sales.demo.agrayianailabs.com')
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -22,26 +22,30 @@ export default function AIInsightsPanel({ isOpen, onClose, currentPage, contextD
     try {
       let response;
       try {
-        response = await axios.post(
-          `${API}/insights/generate`,
-          { context: `${dashboard} - analysis`, dashboard, data_summary: contextData ?? {} },
-          opts
-        );
-      } catch (postErr) {
+        response = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard } });
+      } catch (getErr) {
         response = null;
-        throw postErr;
       }
-      if (response?.data && isOldFallback(response.data)) {
-        const getRes = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard } });
-        setInsights(getRes.data);
+      if (!response?.data || isOldFallback(response.data)) {
+        try {
+          response = await axios.post(
+            `${API}/insights/generate`,
+            { context: `${dashboard} - analysis`, dashboard, data_summary: contextData ?? {} },
+            opts
+          );
+        } catch (postErr) {
+          response = null;
+        }
+      }
+      if (response?.data && !isOldFallback(response.data)) {
+        setInsights(response.data);
+        setError(null);
       } else {
-        setInsights(response?.data ?? null);
+        throw new Error("No insights");
       }
-      setError(null);
     } catch (err) {
-      const dashboard = currentPage || "Executive Summary";
       try {
-        const getRes = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard } });
+        const getRes = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard: currentPage || "Executive Summary" } });
         setInsights(getRes.data);
         setError(null);
       } catch (getErr) {
