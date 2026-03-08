@@ -124,14 +124,16 @@ export default function AIInsightsTabContent({ currentPage }) {
           </AccordionTrigger>
           <AccordionContent className="pb-4 pt-0">
             <ul className="space-y-3">
-              {insights.insights?.map((insight, idx) => (
-                <li
-                  key={idx}
-                  className="text-sm text-slate-700 pl-4 border-l-2 border-amber-300 leading-relaxed"
-                >
-                  {insight}
-                </li>
-              ))}
+              {(insights.insights && insights.insights.length > 0)
+                ? insights.insights.map((insight, idx) => (
+                    <li
+                      key={idx}
+                      className="text-sm text-slate-700 pl-4 border-l-2 border-amber-300 leading-relaxed"
+                    >
+                      {insight}
+                    </li>
+                  ))
+                : <li className="text-sm text-slate-500 italic">No insights yet. Ensure the backend is connected to MongoDB with sales data and try Refresh insights.</li>}
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -145,14 +147,16 @@ export default function AIInsightsTabContent({ currentPage }) {
           </AccordionTrigger>
           <AccordionContent className="pb-4 pt-0">
             <ul className="space-y-3">
-              {insights.recommendations?.map((rec, idx) => (
-                <li
-                  key={idx}
-                  className="text-sm text-slate-700 pl-4 border-l-2 border-blue-300 leading-relaxed"
-                >
-                  {rec}
-                </li>
-              ))}
+              {(insights.recommendations && insights.recommendations.length > 0)
+                ? insights.recommendations.map((rec, idx) => (
+                    <li
+                      key={idx}
+                      className="text-sm text-slate-700 pl-4 border-l-2 border-blue-300 leading-relaxed"
+                    >
+                      {rec}
+                    </li>
+                  ))
+                : <li className="text-sm text-slate-500 italic">No recommendations yet. Ensure the backend is connected to MongoDB with sales data and try Refresh insights.</li>}
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -166,14 +170,16 @@ export default function AIInsightsTabContent({ currentPage }) {
           </AccordionTrigger>
           <AccordionContent className="pb-4 pt-0">
             <ul className="space-y-3">
-              {insights.action_items?.map((action, idx) => (
-                <li
-                  key={idx}
-                  className="text-sm text-slate-700 pl-4 border-l-2 border-emerald-300 leading-relaxed"
-                >
-                  {action}
-                </li>
-              ))}
+              {(insights.action_items && insights.action_items.length > 0)
+                ? insights.action_items.map((action, idx) => (
+                    <li
+                      key={idx}
+                      className="text-sm text-slate-700 pl-4 border-l-2 border-emerald-300 leading-relaxed"
+                    >
+                      {action}
+                    </li>
+                  ))
+                : <li className="text-sm text-slate-500 italic">No action items yet. Ensure the backend is connected to MongoDB with sales data and try Refresh insights.</li>}
             </ul>
           </AccordionContent>
         </AccordionItem>
