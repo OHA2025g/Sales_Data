@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+backend/venv/
+.pnp
+.pnp.js
+
+# Env and secrets (do not commit)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build / output
+frontend/build/
+dist/
+*.egg-info/
+.eggs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.so
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs and cache
+*.log
+.cache/
+.npm
+.yarn-integrity

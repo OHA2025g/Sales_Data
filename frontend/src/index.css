@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+/* Hide Emergent branding (badge may be in cached HTML or injected) */
+#emergent-badge,
+a[href*="emergent.sh"],
+a[id="emergent-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', sans-serif;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+@layer base {
+    :root {
+        --background: 210 20% 98%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 330 82% 52%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 222 47% 11%;
+        --secondary-foreground: 0 0% 100%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222 47% 11%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 330 82% 52%;
+        --chart-1: 330 82% 52%;
+        --chart-2: 222 47% 11%;
+        --chart-3: 160 84% 39%;
+        --chart-4: 38 92% 50%;
+        --chart-5: 217 91% 60%;
+        --chart-6: 262 83% 58%;
+        --radius: 0.75rem;
+        --success: 160 84% 39%;
+        --warning: 38 92% 50%;
+        --danger: 0 84% 60%;
+        --info: 217 91% 60%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+/* KPI Card hover effect */
+.kpi-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -12px rgba(214, 51, 132, 0.15);
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Table styles */
+.data-table th {
+    @apply bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 py-3 px-4;
+}
+
+.data-table td {
+    @apply py-3 px-4 text-sm text-slate-700 border-b border-slate-100;
+}
+
+.data-table tr:hover td {
+    @apply bg-primary/5;
+}
+
+/* Sidebar active item */
+.sidebar-item-active {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8B5CF6 100%);
+    box-shadow: 0 4px 15px -3px rgba(214, 51, 132, 0.4);
+}
+
+/* AI Panel */
+.ai-panel-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8B5CF6 100%);
+}
+
+/* Progress bar animation */
+.progress-bar-animated {
+    animation: progressAnimation 1.5s ease-out forwards;
+}
+
+@keyframes progressAnimation {
+    from { width: 0; }
+}
+
+/* Recharts tooltip customization */
+.recharts-tooltip-wrapper {
+    outline: none !important;
+}
+
+.custom-tooltip {
+    @apply bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-100 p-3;
+}
