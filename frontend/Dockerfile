@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps && npm install ajv@6 ajv-keywords@3
 
 # Backend URL
 ARG REACT_APP_BACKEND_URL=https://sales.demo.agrayianailabs.com
