@@ -11,7 +11,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 # Backend URL at build time (set in EasyPanel build args or leave default)
-ARG REACT_APP_BACKEND_URL=http://localhost:10000
+ARG REACT_APP_BACKEND_URL=https://sales.demo.agrayianailabs.com
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
 COPY . .
