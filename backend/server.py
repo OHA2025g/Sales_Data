@@ -1079,12 +1079,20 @@ def _normalize_dashes(s: str) -> str:
     return s
 
 
+_DEFAULT_INSIGHT = "No data available. Load sales data to generate insights."
+_DEFAULT_REC = "Load data and refresh insights."
+_DEFAULT_ACTION = "Load data and try again."
+
+
 def _insight_response(insights: List[str], recommendations: List[str], action_items: List[str]) -> InsightResponse:
-    """Build InsightResponse with all insight text normalized to use ASCII hyphen instead of Unicode dashes."""
+    """Build InsightResponse; never return empty lists so the UI always has something to show."""
+    def _norm(lst: List[str], default: str) -> List[str]:
+        out = [_normalize_dashes(x) for x in (lst or []) if x]
+        return out if out else [default]
     return InsightResponse(
-        insights=[_normalize_dashes(x) for x in (insights or [])],
-        recommendations=[_normalize_dashes(x) for x in (recommendations or [])],
-        action_items=[_normalize_dashes(x) for x in (action_items or [])],
+        insights=_norm(insights, _DEFAULT_INSIGHT),
+        recommendations=_norm(recommendations, _DEFAULT_REC),
+        action_items=_norm(action_items, _DEFAULT_ACTION),
     )
 
 
