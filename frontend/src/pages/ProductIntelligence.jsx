@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   Package, 
@@ -25,7 +26,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 const COLORS = ["#D63384", "#0F172A", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"];
 
@@ -54,12 +55,20 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const DRILL_GROUP_OPTIONS = [
+  { value: "month", label: "Month" },
+  { value: "zone", label: "Zone" },
+  { value: "state", label: "State" },
+  { value: "product", label: "Product" },
+];
+
 export default function ProductIntelligence() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productDetails, setProductDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -88,6 +97,10 @@ export default function ProductIntelligence() {
     } finally {
       setDetailsLoading(false);
     }
+  };
+
+  const openDrill = (config) => {
+    navigate("/drill", { state: { ...config, parentPath: "/products", parentLabel: "Product Intelligence" } });
   };
 
   const topProducts = products.slice(0, 10);
@@ -216,24 +229,28 @@ export default function ProductIntelligence() {
               value={products.length}
               icon={Package}
               testId="kpi-total-products"
+              onClick={() => openDrill({ type: "dashboard", title: "Total Products", metric: "products", valueFormat: "number", groupByOptions: DRILL_GROUP_OPTIONS })}
             />
             <KPICard
               title="Total Revenue"
               value={formatCurrency(totalValue)}
               icon={TrendingUp}
               testId="kpi-total-revenue"
+              onClick={() => openDrill({ type: "revenue-kpi", title: "Total Revenue", kpi: "net_sales_value", valueFormat: "currency", groupByOptions: DRILL_GROUP_OPTIONS })}
             />
             <KPICard
               title="Total Quantity"
               value={totalQty.toLocaleString()}
               icon={BarChart3}
               testId="kpi-total-qty"
+              onClick={() => openDrill({ type: "static", title: "Total Quantity by Product", staticRows: products.map((p) => ({ name: p.product, value: p.sales_qty })), valueFormat: "number" })}
             />
             <KPICard
               title="Total Customers"
               value={products.reduce((sum, p) => sum + p.customer_count, 0)}
               icon={Users}
               testId="kpi-product-customers"
+              onClick={() => openDrill({ type: "static", title: "Customers by Product", staticRows: products.map((p) => ({ name: p.product, value: p.customer_count })), valueFormat: "number" })}
             />
           </>
         )}

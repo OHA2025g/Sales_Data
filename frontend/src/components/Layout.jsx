@@ -6,6 +6,7 @@ import {
   MapPin, 
   Users, 
   DollarSign, 
+  BadgePercent,
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
 import AIInsightsTabContent from "@/components/AIInsightsTabContent";
+import DataChatBot from "@/components/DataChatBot";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -25,15 +27,19 @@ const navItems = [
   { path: "/geography", label: "Geography Intelligence", icon: MapPin },
   { path: "/customers", label: "Customer Analytics", icon: Users },
   { path: "/pricing", label: "Pricing & Discount", icon: DollarSign },
+  { path: "/incentives", label: "Incentive Analytics", icon: BadgePercent },
   { path: "/risk", label: "Risk & Governance", icon: ShieldAlert },
 ];
 
 export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("ai-insights");
   const location = useLocation();
+  const tabValue = location.pathname === "/drill" ? "dashboards" : activeTab;
 
   const getCurrentPageName = () => {
+    if (location.pathname === "/drill") return "KPI Drill-down";
     const item = navItems.find(item => item.path === location.pathname);
     return item ? item.label : "Dashboard";
   };
@@ -127,7 +133,7 @@ export default function Layout() {
 
         {/* Tabs: AI Insights | Dashboards */}
         <div className="px-8 pt-4">
-          <Tabs defaultValue="ai-insights" className="w-full">
+          <Tabs value={tabValue} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-slate-100 p-1 rounded-lg">
               <TabsTrigger value="ai-insights" className="data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
                 <Sparkles className="w-4 h-4" />
@@ -154,6 +160,9 @@ export default function Layout() {
         onClose={() => setAiPanelOpen(false)}
         currentPage={getCurrentPageName()}
       />
+
+      {/* Data & Insights Chatbot */}
+      <DataChatBot />
     </div>
   );
 }

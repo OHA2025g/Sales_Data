@@ -1,69 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Sparkles, Lightbulb, Target, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 export default function AIInsightsPanel({ isOpen, onClose, currentPage, contextData }) {
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const insightsCacheRef = useRef({});
 
-  const generateInsights = async () => {
+  const generateInsights = useCallback(async () => {
+    const dashboard = currentPage || "Executive Summary";
+    if (insightsCacheRef.current[dashboard]) {
+      setInsights(insightsCacheRef.current[dashboard]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    const opts = { timeout: 60000 };
+    const opts = { timeout: 20000 };
     const isOldFallback = (data) =>
       data?.insights?.[0] === "Unable to generate AI insights at this time.";
 
-    const dashboard = currentPage || "Executive Summary";
     try {
-      let response;
-      try {
-        response = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard } });
-      } catch (getErr) {
-        response = null;
-      }
+      let response = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard, force: 1 } });
       if (!response?.data || isOldFallback(response.data)) {
-        try {
-          response = await axios.post(
-            `${API}/insights/generate`,
-            { context: `${dashboard} - analysis`, dashboard, data_summary: contextData ?? {} },
-            opts
-          );
-        } catch (postErr) {
-          response = null;
-        }
+        response = await axios.post(
+          `${API}/insights/generate`,
+          { context: `${dashboard} - analysis`, dashboard, data_summary: contextData ?? {} },
+          opts
+        );
       }
       if (response?.data && !isOldFallback(response.data)) {
+        insightsCacheRef.current[dashboard] = response.data;
         setInsights(response.data);
         setError(null);
       } else {
         throw new Error("No insights");
       }
     } catch (err) {
-      try {
-        const getRes = await axios.get(`${API}/insights/generate`, { ...opts, params: { dashboard: currentPage || "Executive Summary" } });
-        setInsights(getRes.data);
-        setError(null);
-      } catch (getErr) {
-        console.error("Error generating insights:", getErr);
-        setError(getErr.response?.data?.detail || "Failed to generate insights. Ensure backend is running and data is loaded.");
-        setInsights(null);
-      }
+      console.error("Error generating insights:", err);
+      setError(err.response?.data?.detail || "Failed to generate insights. Ensure backend is running and data is loaded.");
+      setInsights(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [contextData, currentPage]);
 
   useEffect(() => {
     if (isOpen) {
       setError(null);
       if (!insights) generateInsights();
     }
-  }, [isOpen]);
+  }, [generateInsights, insights, isOpen]);
 
   if (!isOpen) return null;
 

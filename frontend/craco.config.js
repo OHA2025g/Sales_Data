@@ -86,6 +86,14 @@ if (config.enableVisualEdits && babelMetadataPlugin) {
 }
 
 webpackConfig.devServer = (devServerConfig) => {
+  devServerConfig.proxy = {
+    ...(devServerConfig.proxy || {}),
+    "/api": {
+      target: process.env.REACT_APP_PROXY_TARGET || "http://localhost:10000",
+      changeOrigin: true,
+    },
+  };
+
   // Apply visual edits dev server setup only if enabled
   if (config.enableVisualEdits && setupDevServer) {
     devServerConfig = setupDevServer(devServerConfig);

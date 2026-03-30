@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   DollarSign, 
@@ -23,7 +24,7 @@ import {
   ReferenceLine
 } from "recharts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 const COLORS = ["#D63384", "#0F172A", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"];
 
@@ -55,6 +56,7 @@ export default function PricingControl() {
   const [loading, setLoading] = useState(true);
   const [pricing, setPricing] = useState([]);
   const [discountDist, setDiscountDist] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -87,6 +89,10 @@ export default function PricingControl() {
   const belowRealization = pricing.filter(p => p.price_realization < 1).length;
   const aboveRealization = pricing.filter(p => p.price_realization >= 1).length;
 
+  const openDrill = (config) => {
+    navigate("/drill", { state: { ...config, parentPath: "/pricing", parentLabel: "Pricing & Discount" } });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="pricing-control">
       {/* KPI Summary */}
@@ -106,12 +112,14 @@ export default function PricingControl() {
               subtitle="PPU / List Price"
               icon={DollarSign}
               testId="kpi-price-realization"
+              onClick={() => openDrill({ type: "static", title: "Price Realization by Product", staticRows: pricing.map((p) => ({ name: p.product, value: (p.price_realization * 100).toFixed(2), pct: (p.price_realization * 100) })), valueFormat: "percent", showPctColumn: false })}
             />
             <KPICard
               title="Avg Discount"
               value={`${avgDiscount.toFixed(2)}%`}
               icon={Percent}
               testId="kpi-avg-discount"
+              onClick={() => openDrill({ type: "static", title: "Avg Discount by Product", staticRows: pricing.map((p) => ({ name: p.product, value: p.avg_discount })), valueFormat: "percent" })}
             />
             <KPICard
               title="At/Above List Price"
@@ -119,6 +127,7 @@ export default function PricingControl() {
               subtitle="Products"
               icon={CheckCircle}
               testId="kpi-above-price"
+              onClick={() => openDrill({ type: "static", title: "Products At/Above List Price", staticRows: pricing.filter((p) => p.price_realization >= 1).map((p) => ({ name: p.product, value: (p.price_realization * 100).toFixed(1) })), valueFormat: "number" })}
             />
             <KPICard
               title="Below List Price"
@@ -126,6 +135,7 @@ export default function PricingControl() {
               subtitle="Products"
               icon={AlertCircle}
               testId="kpi-below-price"
+              onClick={() => openDrill({ type: "static", title: "Products Below List Price", staticRows: pricing.filter((p) => p.price_realization < 1).map((p) => ({ name: p.product, value: (p.price_realization * 100).toFixed(1) })), valueFormat: "number" })}
             />
           </>
         )}

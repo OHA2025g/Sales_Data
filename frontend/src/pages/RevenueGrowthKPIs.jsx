@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import {
@@ -34,8 +35,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
+  Cell,
+} from "recharts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 const KPI_CONFIG = [
   {
@@ -132,6 +146,7 @@ const DIMENSION_LABELS = {
 };
 
 export default function RevenueGrowthKPIs() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [drillKpi, setDrillKpi] = useState(null);
@@ -140,6 +155,7 @@ export default function RevenueGrowthKPIs() {
   const [drillData, setDrillData] = useState([]);
   const [drillLoading, setDrillLoading] = useState(false);
   const [filters, setFilters] = useState({});
+  const [visuals, setVisuals] = useState(null);
 
   useEffect(() => {
     fetchSummary();
@@ -156,12 +172,26 @@ export default function RevenueGrowthKPIs() {
       revenue_concentration_pct: 0,
       data_loaded: false,
     };
+    const emptyVisuals = {
+      kpis: {
+        cagr_3m_pct: 0,
+        run_rate: 0,
+        run_rate_target: 0,
+        run_rate_vs_target_pct: 0,
+        recovery_growth_return_adjusted_pct: 0,
+      },
+      run_rate_vs_target: [],
+      growth_contribution: { zone: [], state: [], product: [] },
+      new_vs_existing_growth: [],
+      recovery_breakdown: [],
+    };
     try {
       // Use same endpoints as Executive Dashboard so data loads when dashboard works
-      const [overviewRes, trendsRes, concentrationRes] = await Promise.all([
+      const [overviewRes, trendsRes, concentrationRes, visualsRes] = await Promise.all([
         axios.get(`${API}/dashboard/overview`),
         axios.get(`${API}/dashboard/trends`),
         axios.get(`${API}/dashboard/concentration`),
+        axios.get(`${API}/revenue-growth/visuals`),
       ]);
       const overview = overviewRes.data;
       const trends = trendsRes.data || [];
@@ -178,9 +208,11 @@ export default function RevenueGrowthKPIs() {
         revenue_concentration_pct: concentration.top_3_states_pct ?? 0,
         data_loaded: true,
       });
+      setVisuals(visualsRes.data || emptyVisuals);
     } catch (err) {
       console.error(err);
       setSummary(emptySummary);
+      setVisuals(emptyVisuals);
       if (err.response?.status !== 404) {
         toast.error(err.code === "ERR_NETWORK"
           ? "Cannot reach server. Is the backend running on port 10000?"
@@ -194,7 +226,11 @@ export default function RevenueGrowthKPIs() {
   const loadData = async () => {
     try {
       const res = await axios.post(`${API}/data/load`);
-      toast.success(`Data loaded: ${res.data?.records_loaded ?? 0} records`);
+      if (res.data?.status === "started" || res.data?.status === "running") {
+        toast.success("Data load started. KPIs will refresh shortly.");
+      } else {
+        toast.success(`Data loaded: ${res.data?.records_loaded ?? 0} records`);
+      }
       await fetchSummary();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Failed to load data. Ensure backend and MongoDB are running.");
@@ -226,6 +262,24 @@ export default function RevenueGrowthKPIs() {
   }, [drillOpen, drillKpi, drillGroupBy, filters]);
 
   const openDrill = (kpi) => {
+    if (kpi.id === "net_sales_value") {
+      navigate("/drill", {
+        state: {
+          type: "revenue-kpi",
+          title: "Net Sales Value",
+          kpi: "net_sales_value",
+          kpiKey: "net_sales_value",
+          valueFormat: "currency",
+          groupByOptions: (kpi.granularity || []).map((g) => ({
+            value: g,
+            label: DIMENSION_LABELS[g] || g,
+          })),
+          parentPath: "/revenue-growth",
+          parentLabel: "Revenue & Growth KPIs",
+        },
+      });
+      return;
+    }
     setDrillKpi(kpi);
     setFilters({});
     setDrillGroupBy(kpi.granularity[0]);
@@ -274,6 +328,13 @@ export default function RevenueGrowthKPIs() {
   }
 
   const noData = summary && summary.data_loaded === false;
+  const growthContribChart =
+    (visuals?.growth_contribution?.product && visuals.growth_contribution.product.length > 0
+      ? visuals.growth_contribution.product
+      : visuals?.growth_contribution?.state && visuals.growth_contribution.state.length > 0
+        ? visuals.growth_contribution.state
+        : visuals?.growth_contribution?.zone || []
+    ).slice(0, 8);
 
   return (
     <div className="space-y-6">
@@ -317,6 +378,91 @@ export default function RevenueGrowthKPIs() {
             </div>
           );
         })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <p className="text-xs text-slate-500">3M CAGR</p>
+          <p className="text-2xl font-bold font-['Manrope']">{Number(visuals?.kpis?.cagr_3m_pct || 0).toFixed(2)}%</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <p className="text-xs text-slate-500">Run-rate</p>
+          <p className="text-2xl font-bold font-['Manrope']">{formatCurrency(visuals?.kpis?.run_rate || 0)}</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <p className="text-xs text-slate-500">Target</p>
+          <p className="text-2xl font-bold font-['Manrope']">{formatCurrency(visuals?.kpis?.run_rate_target || 0)}</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <p className="text-xs text-slate-500">Run-rate vs Target</p>
+          <p className="text-2xl font-bold font-['Manrope']">{Number(visuals?.kpis?.run_rate_vs_target_pct || 0).toFixed(2)}%</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+          <p className="text-xs text-slate-500">Recovery Growth (Return-adjusted)</p>
+          <p className="text-2xl font-bold font-['Manrope']">{Number(visuals?.kpis?.recovery_growth_return_adjusted_pct || 0).toFixed(2)}%</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <h3 className="font-semibold text-slate-900 mb-4 font-['Manrope']">Run-rate vs Target</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={visuals?.run_rate_vs_target || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94A3B8" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#94A3B8" tickFormatter={(v) => formatCurrency(v)} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value || 0))} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                {(visuals?.run_rate_vs_target || []).map((entry, idx) => (
+                  <Cell key={`run-rate-${idx}`} fill={entry.name === "Run-rate" ? "#D63384" : "#0F172A"} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <h3 className="font-semibold text-slate-900 mb-4 font-['Manrope']">Recovery Growth Breakdown</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={visuals?.recovery_breakdown || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#94A3B8" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#94A3B8" />
+              <Tooltip formatter={(value) => `${Number(value || 0).toFixed(2)}%`} />
+              <Bar dataKey="value" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <h3 className="font-semibold text-slate-900 mb-4 font-['Manrope']">Growth Contribution (Top)</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={growthContribChart} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis type="number" tick={{ fontSize: 12 }} stroke="#94A3B8" tickFormatter={(v) => formatCurrency(v)} />
+              <YAxis type="category" dataKey="dimension" tick={{ fontSize: 11 }} stroke="#94A3B8" width={110} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value || 0))} />
+              <Bar dataKey="delta_value" fill="#10B981" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+          <h3 className="font-semibold text-slate-900 mb-4 font-['Manrope']">New vs Existing Customer Growth</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={visuals?.new_vs_existing_growth || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis dataKey="segment" tick={{ fontSize: 12 }} stroke="#94A3B8" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#94A3B8" tickFormatter={(v) => formatCurrency(v)} />
+              <Tooltip formatter={(value, name) => (name === "growth_pct" ? `${Number(value || 0).toFixed(2)}%` : formatCurrency(Number(value || 0)))} />
+              <Legend />
+              <Line type="monotone" dataKey="prev_value" stroke="#0F172A" strokeWidth={2} name="Previous" />
+              <Line type="monotone" dataKey="latest_value" stroke="#D63384" strokeWidth={2} name="Latest" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <Sheet open={drillOpen} onOpenChange={setDrillOpen}>

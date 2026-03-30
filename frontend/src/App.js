@@ -9,6 +9,8 @@ import GeographyIntelligence from "@/pages/GeographyIntelligence";
 import CustomerAnalytics from "@/pages/CustomerAnalytics";
 import PricingControl from "@/pages/PricingControl";
 import RiskGovernance from "@/pages/RiskGovernance";
+import IncentiveAnalytics from "@/pages/IncentiveAnalytics";
+import DrillDownPage from "@/pages/DrillDownPage";
 
 function App() {
   return (
@@ -22,7 +24,9 @@ function App() {
             <Route path="geography" element={<GeographyIntelligence />} />
             <Route path="customers" element={<CustomerAnalytics />} />
             <Route path="pricing" element={<PricingControl />} />
+            <Route path="incentives" element={<IncentiveAnalytics />} />
             <Route path="risk" element={<RiskGovernance />} />
+            <Route path="drill" element={<DrillDownPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

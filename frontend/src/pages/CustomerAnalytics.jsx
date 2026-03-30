@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   Users, 
@@ -25,7 +26,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 const COLORS = ["#D63384", "#0F172A", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"];
 
@@ -52,11 +53,18 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const DRILL_GROUP_OPTIONS = [
+  { value: "month", label: "Month" },
+  { value: "zone", label: "Zone" },
+  { value: "state", label: "State" },
+];
+
 export default function CustomerAnalytics() {
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState([]);
   const [concentration, setConcentration] = useState(null);
   const [risk, setRisk] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -82,6 +90,10 @@ export default function CustomerAnalytics() {
 
   const totalValue = customers.reduce((sum, c) => sum + c.sales_value, 0);
 
+  const openDrill = (config) => {
+    navigate("/drill", { state: { ...config, parentPath: "/customers", parentLabel: "Customer Analytics" } });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="customer-analytics">
       {/* KPI Summary */}
@@ -100,6 +112,7 @@ export default function CustomerAnalytics() {
               value={concentration?.total_customers || 0}
               icon={Users}
               testId="kpi-total-customers"
+              onClick={() => openDrill({ type: "dashboard", title: "Total Customers", metric: "customers", valueFormat: "number", groupByOptions: DRILL_GROUP_OPTIONS })}
             />
             <KPICard
               title="Top 10 Share"
@@ -107,6 +120,7 @@ export default function CustomerAnalytics() {
               subtitle="Revenue concentration"
               icon={Target}
               testId="kpi-top10-share"
+              onClick={() => openDrill({ type: "static", title: "Top 10 Customers by Revenue", staticRows: (concentration?.pareto_data || []).slice(0, 10).map((c) => ({ name: c.customer, value: c.value, pct: c.pct })), valueFormat: "currency", showPctColumn: true })}
             />
             <KPICard
               title="Top 20 Share"
@@ -114,6 +128,7 @@ export default function CustomerAnalytics() {
               subtitle="Revenue concentration"
               icon={BarChart3}
               testId="kpi-top20-share"
+              onClick={() => openDrill({ type: "static", title: "Top 20 Customers by Revenue", staticRows: (concentration?.pareto_data || []).slice(0, 20).map((c) => ({ name: c.customer, value: c.value, pct: c.pct })), valueFormat: "currency", showPctColumn: true })}
             />
             <KPICard
               title="Stop Business"
@@ -121,6 +136,7 @@ export default function CustomerAnalytics() {
               subtitle={`Value: ${formatCurrency(risk?.stop_business_value || 0)}`}
               icon={UserX}
               testId="kpi-stop-business"
+              onClick={() => openDrill({ type: "static", title: "Stop Business Customers", staticRows: (risk?.stop_business_customers || []).map((c) => ({ name: c.customer, value: c.value })), valueFormat: "currency" })}
             />
           </>
         )}

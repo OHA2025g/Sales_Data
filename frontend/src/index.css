@@ -159,6 +159,11 @@ code {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8B5CF6 100%);
 }
 
+/* Data Chat panel */
+.chat-panel-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, #8B5CF6 100%);
+}
+
 /* Progress bar animation */
 .progress-bar-animated {
     animation: progressAnimation 1.5s ease-out forwards;

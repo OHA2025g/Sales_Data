@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load sales data from local Excel files into MongoDB.
+Load sales data from local Sales_Data.xlsx into MongoDB.
 Usage: MONGO_URL="mongodb://user:pass@host:port/?tls=false" DB_NAME=sales_dashboard python seed_to_mongo.py
 """
 
@@ -24,20 +24,32 @@ def main():
     mongo_url = get_mongo_url()
     db_name = os.environ.get("DB_NAME", "sales_dashboard")
     root = Path(__file__).resolve().parent.parent
-    files = [root / "Sales Data.xlsx", root / "Sales 2.xlsx"]
-    if not all(f.exists() for f in files):
-        print("Local Excel files not found: Sales Data.xlsx, Sales 2.xlsx", file=sys.stderr)
+    sales_file = root / "Sales_Data.xlsx"
+    if not sales_file.exists():
+        print("Local Excel file not found: Sales_Data.xlsx", file=sys.stderr)
         sys.exit(1)
-    dfs = [pd.read_excel(f) for f in files]
-    combined = pd.concat(dfs, ignore_index=True)
+    sheets = pd.read_excel(sales_file, sheet_name=None)
+    frames = []
+    for _, df in sheets.items():
+        if df is None or df.empty:
+            continue
+        df.columns = df.columns.str.strip()
+        if "NET_SALES_VALUE" in df.columns or "TRAN_ID" in df.columns or "Product" in df.columns:
+            frames.append(df)
+    if not frames:
+        frames = [df for df in sheets.values() if df is not None and not df.empty]
+    if not frames:
+        print("No data rows found in Sales_Data.xlsx", file=sys.stderr)
+        sys.exit(1)
+
+    combined = pd.concat(frames, ignore_index=True)
     combined.columns = combined.columns.str.strip()
+    combined = combined.where(pd.notna(combined), None)
     records = combined.to_dict("records")
     for r in records:
         for k, v in list(r.items()):
             if isinstance(v, pd.Timestamp):
                 r[k] = v.isoformat()
-            elif pd.isna(v):
-                r[k] = None
     client = MongoClient(mongo_url, serverSelectionTimeoutMS=15000)
     db = client[db_name]
     coll = db[COLLECTION]

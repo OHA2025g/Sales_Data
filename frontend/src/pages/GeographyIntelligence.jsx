@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
   MapPin, 
@@ -25,7 +26,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from "@/apiConfig";
 
 const COLORS = ["#D63384", "#0F172A", "#10B981", "#F59E0B", "#3B82F6", "#8B5CF6"];
 
@@ -62,6 +63,7 @@ export default function GeographyIntelligence() {
   const [selectedState, setSelectedState] = useState(null);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchZones();
@@ -159,6 +161,10 @@ export default function GeographyIntelligence() {
   const currentData = getCurrentData();
   const currentTotal = currentData.reduce((sum, d) => sum + d.sales_value, 0);
 
+  const openDrill = (config) => {
+    navigate("/drill", { state: { ...config, parentPath: "/geography", parentLabel: "Geography Intelligence" } });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="geography-intelligence">
       {/* Breadcrumb & Back Button */}
@@ -188,24 +194,28 @@ export default function GeographyIntelligence() {
               value={currentData.length}
               icon={MapPin}
               testId="kpi-geo-count"
+              onClick={() => openDrill({ type: "static", title: drillLevel === "zone" ? "Zones" : drillLevel === "state" ? "States in Zone" : "Cities in State", staticRows: currentData.map((d) => ({ name: d.name, value: d.transaction_count ?? d.customer_count ?? 0 })), valueFormat: "number" })}
             />
             <KPICard
               title="Total Revenue"
               value={formatCurrency(currentTotal)}
               icon={TrendingUp}
               testId="kpi-geo-revenue"
+              onClick={() => openDrill({ type: "static", title: "Revenue by " + (drillLevel === "zone" ? "Zone" : drillLevel === "state" ? "State" : "City"), staticRows: currentData.map((d) => ({ name: d.name, value: d.sales_value })), valueFormat: "currency" })}
             />
             <KPICard
               title="Total Customers"
               value={currentData.reduce((sum, d) => sum + d.customer_count, 0)}
               icon={Users}
               testId="kpi-geo-customers"
+              onClick={() => openDrill({ type: "static", title: "Customers by " + (drillLevel === "zone" ? "Zone" : drillLevel === "state" ? "State" : "City"), staticRows: currentData.map((d) => ({ name: d.name, value: d.customer_count })), valueFormat: "number" })}
             />
             <KPICard
               title="Avg Revenue/Customer"
               value={formatCurrency(currentTotal / Math.max(currentData.reduce((sum, d) => sum + d.customer_count, 0), 1))}
               icon={Building2}
               testId="kpi-geo-avg"
+              onClick={() => openDrill({ type: "static", title: "Avg Revenue/Customer", staticRows: currentData.map((d) => ({ name: d.name, value: d.avg_per_customer ?? (d.customer_count ? d.sales_value / d.customer_count : 0) })), valueFormat: "currency" })}
             />
           </>
         )}
@@ -231,7 +241,11 @@ export default function GeographyIntelligence() {
                   paddingAngle={2}
                   dataKey="sales_value"
                   nameKey="name"
-                  label={({ name, contribution_pct }) => `${name?.substring(0, 10)}${name?.length > 10 ? '...' : ''}: ${contribution_pct}%`}
+                  label={({ name, contribution_pct }) => {
+                    const labelName = String(name ?? "Unknown");
+                    const short = labelName.length > 10 ? `${labelName.substring(0, 10)}...` : labelName;
+                    return `${short}: ${contribution_pct}%`;
+                  }}
                 >
                   {currentData.slice(0, 8).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

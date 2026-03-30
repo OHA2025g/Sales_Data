@@ -6,11 +6,16 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Application code (do not COPY .env; use EasyPanel env vars for MONGO_URL, DB_NAME, etc.)
-COPY server.py .
+COPY backend/server.py ./server.py
+COPY backend/copilot_responses.py ./copilot_responses.py
+COPY backend/sales_insight_engine.py ./sales_insight_engine.py
+
+# Bundle dataset inside image to avoid Docker-for-Mac bind-mount read deadlocks.
+COPY Sales_Data.xlsx ./Sales_Data.xlsx
 
 EXPOSE 10000
 

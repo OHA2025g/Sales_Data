@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: salesiq-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: salesiq-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URL: "mongodb://mongo:27017"
+      DB_NAME: "sales_dashboard"
+      CORS_ORIGINS: "*"
+      SALES_DATA_FILE: "/app/Sales_Data.xlsx"
+      HF_TOKEN: "${HF_TOKEN:-}"
+      HF_MODEL: "${HF_MODEL:-mistralai/Mistral-7B-Instruct-v0.3}"
+    depends_on:
+      - mongo
+    ports:
+      - "10000:10000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Same-origin /api → nginx proxies to backend (fixes AI Insights / ERR_NETWORK when host ≠ localhost)
+        REACT_APP_BACKEND_URL: ""
+    container_name: salesiq-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  mongo_data:
+
