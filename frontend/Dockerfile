@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --legacy-peer-deps && npm install --legacy-peer-deps ajv@6 ajv-keywords@3
 
-# Empty = use same-origin /api via nginx proxy (Docker). Override for special builds.
+# Empty = use same-origin /api via nginx proxy (Docker). Override with --build-arg for cloud/API host.
 ARG REACT_APP_BACKEND_URL=
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
