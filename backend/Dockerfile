@@ -15,7 +15,7 @@ COPY backend/copilot_responses.py ./copilot_responses.py
 COPY backend/sales_insight_engine.py ./sales_insight_engine.py
 
 # Bundle dataset inside image to avoid Docker-for-Mac bind-mount read deadlocks.
-COPY Sales_Data.xlsx ./Sales_Data.xlsx
+COPY ["Sales Data.xlsx", "./Sales_Data.xlsx"]
 
 EXPOSE 10000
 
