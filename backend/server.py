@@ -445,8 +445,8 @@ async def load_sales_data():
                 records = await asyncio.to_thread(_read_excel_records_sync, sales_path)
 
                 # Clear existing data and insert new in batches to avoid timeouts.
-        await db.sales_data.delete_many({})
-        if records:
+                await db.sales_data.delete_many({})
+                if records:
                     batch_size = 5000
                     for i in range(0, len(records), batch_size):
                         batch = records[i:i + batch_size]
@@ -475,7 +475,7 @@ async def load_sales_data():
                     "records_loaded": len(records),
                     "error": None,
                 })
-    except Exception as e:
+            except Exception as e:
                 logger.exception(f"Error loading data: {e}")
                 _ETL_STATE.update({
                     "running": False,
@@ -4760,14 +4760,14 @@ async def generate_insights(request: InsightRequest):
         return hf_resp
 
     try:
-    try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
         except ImportError:
             rb = _rule_based_insights_by_dashboard(dashboard or "Executive Summary", data_summary)
             _cache_set(cache_key, rb.model_dump(), ttl_seconds=180)
             await _persist_cache_set(cache_key, rb.model_dump())
             return rb
-        
+
         api_key = os.environ.get("EMERGENT_LLM_KEY")
         if not api_key or str(api_key).strip().startswith("sk-your-"):
             rb = _rule_based_insights_by_dashboard(dashboard or "Executive Summary", data_summary)
