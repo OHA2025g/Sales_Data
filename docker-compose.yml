@@ -26,7 +26,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         # Same-origin /api → nginx proxies to backend (fixes AI Insights / ERR_NETWORK when host ≠ localhost)
         REACT_APP_BACKEND_URL: ""
