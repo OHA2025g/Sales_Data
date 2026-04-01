@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Load sales data from local Sales_Data.xlsx into MongoDB.
-Usage: MONGO_URL="mongodb://user:pass@host:port/?tls=false" DB_NAME=sales_dashboard python seed_to_mongo.py
+Load sales data from a local Excel file into MongoDB (default: Sales 2.xlsx in repo root).
+
+Usage:
+  MONGO_URL="mongodb://user:pass@host:port/?tls=false" DB_NAME=sales_dashboard python seed_to_mongo.py
+
+Optional:
+  SALES_EXCEL="Sales Data.xlsx"   # filename under repo root (parent of backend/)
 """
 
 import os
@@ -24,9 +29,10 @@ def main():
     mongo_url = get_mongo_url()
     db_name = os.environ.get("DB_NAME", "sales_dashboard")
     root = Path(__file__).resolve().parent.parent
-    sales_file = root / "Sales_Data.xlsx"
+    excel_name = os.environ.get("SALES_EXCEL", "Sales 2.xlsx")
+    sales_file = root / excel_name
     if not sales_file.exists():
-        print("Local Excel file not found: Sales_Data.xlsx", file=sys.stderr)
+        print(f"Local Excel file not found: {sales_file}", file=sys.stderr)
         sys.exit(1)
     sheets = pd.read_excel(sales_file, sheet_name=None)
     frames = []
@@ -39,7 +45,7 @@ def main():
     if not frames:
         frames = [df for df in sheets.values() if df is not None and not df.empty]
     if not frames:
-        print("No data rows found in Sales_Data.xlsx", file=sys.stderr)
+        print(f"No data rows found in {excel_name}", file=sys.stderr)
         sys.exit(1)
 
     combined = pd.concat(frames, ignore_index=True)
