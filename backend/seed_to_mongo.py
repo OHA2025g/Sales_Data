@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load sales data from a local Excel file into MongoDB (default: Sales 2.xlsx in repo root).
+Load sales data from a local Excel file into MongoDB (default: Sales Data.xlsx in repo root).
 
 Usage:
   MONGO_URL="mongodb://user:pass@host:port/?tls=false" DB_NAME=sales_dashboard python seed_to_mongo.py
@@ -29,7 +29,7 @@ def main():
     mongo_url = get_mongo_url()
     db_name = os.environ.get("DB_NAME", "sales_dashboard")
     root = Path(__file__).resolve().parent.parent
-    excel_name = os.environ.get("SALES_EXCEL", "Sales 2.xlsx")
+    excel_name = os.environ.get("SALES_EXCEL", "Sales Data.xlsx")
     sales_file = root / excel_name
     if not sales_file.exists():
         print(f"Local Excel file not found: {sales_file}", file=sys.stderr)

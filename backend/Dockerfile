@@ -15,8 +15,8 @@ COPY backend/copilot_responses.py ./copilot_responses.py
 COPY backend/sales_insight_engine.py ./sales_insight_engine.py
 
 # Bundle datasets inside image to avoid Docker-for-Mac bind-mount read deadlocks.
-# Source file: "Sales 2.xlsx" → /app/Sales_Data.xlsx (SALES_DATA_FILE default).
-COPY ["Sales 2.xlsx", "./Sales_Data.xlsx"]
+# Source file: "Sales Data.xlsx" → /app/Sales_Data.xlsx (SALES_DATA_FILE default).
+COPY ["Sales Data.xlsx", "./Sales_Data.xlsx"]
 # Incentive workbook → /app/Incentive Data1.xlsx (INCENTIVE_DATA_FILE default).
 COPY ["Incentive Data1.xlsx", "./Incentive Data1.xlsx"]
 
